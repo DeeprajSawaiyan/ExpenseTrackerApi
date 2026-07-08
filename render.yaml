@@ -1,0 +1,38 @@
+databases:
+  - name: expense-tracker-db
+    databaseName: expensetracker
+    plan: free
+
+services:
+  - type: web
+    name: expense-tracker-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_HOST
+        fromDatabase:
+          name: expense-tracker-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: expense-tracker-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: expense-tracker-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: expense-tracker-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: expense-tracker-db
+          property: password
+      - key: FRONTEND_URL
+        value: https://deeprajsawaiyan.github.io
