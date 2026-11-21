@@ -76,6 +76,23 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'none' },
         },
+        float: {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-14px) rotate(6deg)' },
+        },
+        poof: {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '100%': { transform: 'scale(1.9)', opacity: '0' },
+        },
+        coin: {
+          '0%': { transform: 'translate(-50%, -50%) scale(0.4)', opacity: '1' },
+          '100%': { transform: 'translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 40px)) scale(1) rotate(200deg)', opacity: '0' },
+        },
+        rise: {
+          '0%': { transform: 'translate(-50%, 0) scale(0.8)', opacity: '0' },
+          '20%': { transform: 'translate(-50%, -12px) scale(1.05)', opacity: '1' },
+          '100%': { transform: 'translate(-50%, -64px) scale(1)', opacity: '0' },
+        },
         'grow-x': {
           '0%': { transform: 'scaleX(0)' },
           '100%': { transform: 'scaleX(1)' },
@@ -94,13 +111,19 @@ export default {
         },
       },
       animation: {
-        'fade-up': 'fade-up 0.4s ease-out both',
+        // 'backwards': hidden during any delay, then hands transform/opacity back to the element
+        // so hover and exit transitions on the same element still work
+        'fade-up': 'fade-up 0.4s ease-out backwards',
         'slide-down': 'slide-down 0.25s ease-out both',
         'page-in': 'page-in 0.35s ease-out',
+        float: 'float 6s ease-in-out infinite',
+        poof: 'poof 0.35s ease-out both',
+        coin: 'coin 0.85s cubic-bezier(.2,.8,.2,1) both',
+        rise: 'rise 0.9s ease-out both',
         'grow-x': 'grow-x 0.9s cubic-bezier(.2,.8,.2,1) both',
         shimmer: 'shimmer 1.4s infinite',
         'shrink-x': 'shrink-x linear both',
-        pop: 'pop 0.35s cubic-bezier(.2,.8,.2,1) both',
+        pop: 'pop 0.35s cubic-bezier(.2,.8,.2,1) backwards',
       },
     },
   },

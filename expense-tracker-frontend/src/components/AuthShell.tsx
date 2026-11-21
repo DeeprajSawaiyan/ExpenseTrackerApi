@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import Logo from './Logo'
+import MoneyPlayground, { PiggyBank } from './MoneyPlayground'
 
 interface AuthShellProps {
   title: string
@@ -15,6 +16,9 @@ const SAMPLE_BUBBLES = [
 ]
 
 export default function AuthShell({ title, subtitle, children, footer }: AuthShellProps) {
+  // Total "saved" by tapping the floating money on the brand panel
+  const [saved, setSaved] = useState(0)
+
   return (
     <div className="grid min-h-screen bg-cream lg:grid-cols-[1.05fr_1fr]">
       {/* Brand panel */}
@@ -30,12 +34,16 @@ export default function AuthShell({ title, subtitle, children, footer }: AuthShe
             track.
           </p>
 
+          <div className="mt-6">
+            <PiggyBank saved={saved} />
+          </div>
+
           <ul className="theme-light text-ink mt-8 hidden max-w-sm flex-col gap-3 sm:flex" aria-hidden="true">
             {SAMPLE_BUBBLES.map((bubble, index) => (
               <li
                 key={bubble.text}
                 style={{ animationDelay: bubble.delay }}
-                className={`flex animate-fade-up items-center justify-between rounded-full bg-white px-5 py-3 text-sm font-semibold text-ink shadow-lift ${bubble.rotate} ${
+                className={`flex animate-fade-up cursor-default items-center justify-between rounded-full bg-white px-5 py-3 text-sm font-semibold text-ink shadow-lift transition duration-300 hover:-translate-y-1 hover:rotate-0 hover:scale-[1.03] ${bubble.rotate} ${
                   index === 1 ? 'ml-10' : ''
                 }`}
               >
@@ -59,6 +67,8 @@ export default function AuthShell({ title, subtitle, children, footer }: AuthShe
           className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border-[28px] border-mustard/90 opacity-90 sm:-right-16 sm:-top-16 lg:-bottom-28 lg:-right-28 lg:top-auto lg:h-96 lg:w-96 lg:border-[40px]"
           aria-hidden="true"
         />
+
+        <MoneyPlayground onSave={(value) => setSaved((current) => current + value)} />
       </aside>
 
       {/* Form panel */}
