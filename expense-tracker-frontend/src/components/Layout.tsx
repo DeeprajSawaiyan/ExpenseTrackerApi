@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Logo from './Logo'
 import ThemeToggle from './ThemeToggle'
@@ -15,6 +15,12 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
   }`
 }
 
+/** True when the user is typing somewhere, so single-key shortcuts must not fire. */
+function isTypingTarget(target: EventTarget | null) {
+  const el = target as HTMLElement | null
+  return Boolean(el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)))
+}
+
 function initials(name?: string) {
   if (!name) return '?'
   return name
@@ -28,7 +34,25 @@ function initials(name?: string) {
 export default function Layout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Keyboard shortcuts: "N" adds an expense, "Esc" closes the mobile menu
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsMenuOpen(false)
+        return
+      }
+      if (event.metaKey || event.ctrlKey || event.altKey || isTypingTarget(event.target)) return
+      if (event.key === 'n' || event.key === 'N') {
+        event.preventDefault()
+        navigate('/expenses/new')
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [navigate])
 
   function handleLogout() {
     logout()
@@ -53,8 +77,11 @@ export default function Layout() {
 
           <div className="hidden items-center gap-3 md:flex">
             <ThemeToggle labelsClassName="hidden lg:inline" className="mr-1" />
-            <Link to="/expenses/new" className="btn-ink">
+            <Link to="/expenses/new" className="btn-ink" title="Add expense (shortcut: N)" aria-keyshortcuts="N">
               <span aria-hidden="true">＋</span> Add expense
+              <kbd className="kbd hidden lg:inline-grid" aria-hidden="true">
+                N
+              </kbd>
             </Link>
             <Link
               to="/profile"
@@ -130,7 +157,10 @@ export default function Layout() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-        <Outlet />
+        {/* Re-keyed per route so each page eases in */}
+        <div key={location.pathname} className="animate-page-in">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

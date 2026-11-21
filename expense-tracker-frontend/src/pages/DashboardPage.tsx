@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import AnimatedAmount from '../components/AnimatedAmount'
 import ErrorAlert from '../components/ErrorAlert'
 import ExpenseFilters from '../components/ExpenseFilters'
 import ExpenseList from '../components/ExpenseList'
-import LoadingSpinner from '../components/LoadingSpinner'
+import ExpenseListSkeleton from '../components/ExpenseListSkeleton'
 import SpendingRing from '../components/SpendingRing'
+import { useAlert } from '../context/AlertContext'
 import { useAuth } from '../context/AuthContext'
 import { useExpenseSummary, type ExpenseSummary } from '../hooks/useExpenseSummary'
 import { useExpenses } from '../hooks/useExpenses'
@@ -41,6 +43,7 @@ export default function DashboardPage() {
   usePageTitle('Dashboard')
 
   const { user } = useAuth()
+  const { showSuccess } = useAlert()
   // Captured once per visit so render stays pure
   const [now] = useState(() => new Date())
   const { summary, isLoading: isSummaryLoading, refresh: refreshSummary } = useExpenseSummary()
@@ -66,8 +69,10 @@ export default function DashboardPage() {
   } = useExpenses()
 
   async function handleDelete(id: number) {
-    await deleteExpense(id)
-    refreshSummary()
+    if (await deleteExpense(id)) {
+      showSuccess('Expense deleted')
+      refreshSummary()
+    }
   }
 
   function filterByCategory(category: string) {
@@ -109,7 +114,7 @@ export default function DashboardPage() {
       {/* Summary */}
       <section className="grid gap-4 lg:grid-cols-[1.25fr_1fr] lg:gap-5" aria-label="Spending summary">
         {/* This month */}
-        <div className="relative flex animate-fade-up flex-col justify-between overflow-hidden rounded-4xl bg-tomato p-6 text-white sm:p-8">
+        <div className="group relative flex animate-fade-up flex-col justify-between overflow-hidden rounded-4xl bg-tomato p-6 text-white transition duration-300 hover:-translate-y-1 hover:shadow-lift sm:p-8">
           <div className="relative z-10">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-white/80">
               {monthName} so far
@@ -119,7 +124,7 @@ export default function DashboardPage() {
             ) : (
               <>
                 <p className="headline mt-3 text-[clamp(2.75rem,8vw,4.75rem)]">
-                  {formatCurrencyShort(summary.thisMonthTotal)}
+                  <AnimatedAmount value={summary.thisMonthTotal} />
                 </p>
                 <p className="mt-3 text-lg text-white/90">
                   across{' '}
@@ -135,30 +140,37 @@ export default function DashboardPage() {
           </div>
 
           <div className="theme-light text-ink relative z-10 mt-8 grid grid-cols-2 gap-3">
-            <div className="rounded-3xl bg-mustard p-4 text-ink">
+            <div className="rounded-3xl bg-mustard p-4 text-ink transition duration-300 hover:-rotate-1 hover:scale-[1.03]">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/70">Last month</p>
               <p className="mt-1 font-display text-xl font-extrabold tracking-tight sm:text-2xl">
-                {isSummaryLoading ? '—' : formatCurrencyShort(summary.lastMonthTotal)}
+                {isSummaryLoading ? '—' : <AnimatedAmount value={summary.lastMonthTotal} />}
               </p>
             </div>
-            <div className="rounded-3xl bg-white p-4 text-ink">
+            <div className="rounded-3xl bg-white p-4 text-ink transition duration-300 hover:rotate-1 hover:scale-[1.03]">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-ink/60">
                 All time{summary.isTruncated ? '*' : ''}
               </p>
               <p className="mt-1 font-display text-xl font-extrabold tracking-tight sm:text-2xl">
-                {isSummaryLoading ? '—' : formatCurrencyShort(summary.allTimeTotal)}
+                {isSummaryLoading ? '—' : <AnimatedAmount value={summary.allTimeTotal} />}
               </p>
             </div>
           </div>
 
           <div
-            className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border-[32px] border-white/10"
+            className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border-[32px] border-white/10 transition-transform duration-700 ease-out group-hover:-translate-x-4 group-hover:translate-y-4 group-hover:scale-110"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -bottom-10 right-1/3 h-24 w-24 rounded-full bg-white/10 transition-transform duration-700 ease-out group-hover:-translate-y-6 group-hover:scale-125"
             aria-hidden="true"
           />
         </div>
 
         {/* Category ring */}
-        <div className="animate-fade-up rounded-4xl bg-forest p-6 text-white sm:p-8" style={{ animationDelay: '80ms' }}>
+        <div
+          className="animate-fade-up rounded-4xl bg-forest p-6 text-white transition duration-300 hover:-translate-y-1 hover:shadow-lift sm:p-8"
+          style={{ animationDelay: '80ms' }}
+        >
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-display text-xl font-bold tracking-tight">Where it went</h2>
             <span className="text-xs font-semibold uppercase tracking-[0.12em] text-white/50">{monthName}</span>
@@ -173,7 +185,13 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="mt-6 grid items-center gap-6 sm:grid-cols-[minmax(0,13rem)_1fr] lg:grid-cols-1 xl:grid-cols-[minmax(0,12rem)_1fr]">
-              <SpendingRing total={summary.thisMonthTotal} byCategory={summary.byCategory} highlight={hoveredCategory} />
+              <SpendingRing
+                total={summary.thisMonthTotal}
+                byCategory={summary.byCategory}
+                highlight={hoveredCategory}
+                onHighlight={setHoveredCategory}
+                onSelect={filterByCategory}
+              />
 
               <ul className="space-y-1" onMouseLeave={() => setHoveredCategory(null)}>
                 {summary.byCategory.map((entry) => {
@@ -187,7 +205,9 @@ export default function DashboardPage() {
                         onMouseEnter={() => setHoveredCategory(entry.category)}
                         onFocus={() => setHoveredCategory(entry.category)}
                         onBlur={() => setHoveredCategory(null)}
-                        className="w-full rounded-2xl px-3 py-2 text-left transition hover:bg-white/10"
+                        className={`w-full rounded-2xl px-3 py-2 text-left transition hover:bg-white/10 ${
+                          hoveredCategory === entry.category ? 'translate-x-1 bg-white/10' : ''
+                        }`}
                         title={`Show ${entry.category} expenses`}
                       >
                         <span className="flex items-center justify-between gap-3 text-sm">
@@ -201,7 +221,7 @@ export default function DashboardPage() {
                         </span>
                         <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-white/10">
                           <span
-                            className="block h-full rounded-full transition-all duration-700"
+                            className="block h-full origin-left animate-grow-x rounded-full transition-all duration-700"
                             style={{ width: `${percent}%`, backgroundColor: meta.color }}
                           />
                         </span>
@@ -244,7 +264,7 @@ export default function DashboardPage() {
         )}
 
         {isLoading ? (
-          <LoadingSpinner fullScreen={false} />
+          <ExpenseListSkeleton />
         ) : (
           (!error || expenses.length > 0) &&
           !showEmptyFilterHint && (

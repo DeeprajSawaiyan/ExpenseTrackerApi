@@ -21,6 +21,8 @@ interface AlertContextValue {
   clearAlert: () => void
 }
 
+const TOAST_DURATION_MS = 4000
+
 const AlertContext = createContext<AlertContextValue | null>(null)
 
 export function AlertProvider({ children }: { children: ReactNode }) {
@@ -45,7 +47,7 @@ export function AlertProvider({ children }: { children: ReactNode }) {
 
     const timeoutId = window.setTimeout(() => {
       setAlert(null)
-    }, 4000)
+    }, TOAST_DURATION_MS)
 
     return () => window.clearTimeout(timeoutId)
   }, [alert])
@@ -61,13 +63,13 @@ export function AlertProvider({ children }: { children: ReactNode }) {
         <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4">
           <div
             key={alert.message}
-            className={`pointer-events-auto flex w-full max-w-md animate-slide-down items-center gap-3 rounded-full py-2.5 pl-3 pr-2 text-sm font-semibold shadow-lift ${
+            className={`pointer-events-auto relative flex w-full max-w-md animate-slide-down items-center gap-3 overflow-hidden rounded-full py-2.5 pl-3 pr-2 text-sm font-semibold shadow-lift ${
               alert.type === 'success' ? 'bg-leaf text-white' : 'bg-night text-white dark:ring-1 dark:ring-white/15'
             }`}
             role={alert.type === 'error' ? 'alert' : 'status'}
           >
             <span
-              className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs ${
+              className={`grid h-7 w-7 shrink-0 animate-pop place-items-center rounded-full text-xs ${
                 alert.type === 'success' ? 'bg-white/20' : 'bg-tomato'
               }`}
               aria-hidden="true"
@@ -83,6 +85,14 @@ export function AlertProvider({ children }: { children: ReactNode }) {
             >
               ✕
             </button>
+            {alert.type === 'success' && (
+              // Shows how long until the toast closes by itself
+              <span
+                className="absolute inset-x-0 bottom-0 h-0.5 origin-left animate-shrink-x bg-white/60"
+                style={{ animationDuration: `${TOAST_DURATION_MS}ms` }}
+                aria-hidden="true"
+              />
+            )}
           </div>
         </div>
       )}

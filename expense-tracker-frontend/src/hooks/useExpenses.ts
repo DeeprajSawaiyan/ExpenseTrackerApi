@@ -3,6 +3,9 @@ import * as expenseApi from '../api/expenseApi'
 import type { Expense } from '../types'
 import { getErrorMessage } from '../utils/errorMessage'
 
+/** Matches the row's slide-out transition in ExpenseList (duration-300) */
+const DELETE_ANIMATION_MS = 300
+
 export type FilterMode = 'all' | 'category' | 'name' | 'date'
 
 export interface ExpenseFilterState {
@@ -114,15 +117,21 @@ export function useExpenses() {
   }, [])
 
   const deleteExpense = useCallback(
-    async (id: number) => {
+    async (id: number): Promise<boolean> => {
       setDeletingId(id)
       setError('')
 
       try {
-        await expenseApi.deleteExpense(id)
+        // Let the row's slide-out animation finish even when the API answers instantly
+        await Promise.all([
+          expenseApi.deleteExpense(id),
+          new Promise((resolve) => window.setTimeout(resolve, DELETE_ANIMATION_MS)),
+        ])
         await fetchExpenses()
+        return true
       } catch (err) {
         setError(getErrorMessage(err))
+        return false
       } finally {
         setDeletingId(null)
       }

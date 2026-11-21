@@ -68,12 +68,12 @@ export default function ExpenseList({
           <li
             key={expense.id}
             style={{ animationDelay: `${Math.min(index, 10) * 30}ms` }}
-            className={`group flex animate-fade-up items-center gap-3 px-4 py-3.5 transition hover:bg-cream sm:gap-4 sm:px-5 ${
-              isDeleting ? 'opacity-50' : ''
+            className={`group flex animate-fade-up items-center gap-3 px-4 py-3.5 transition duration-300 hover:bg-cream sm:gap-4 sm:px-5 ${
+              isDeleting ? 'pointer-events-none translate-x-8 opacity-0' : ''
             }`}
           >
             <span
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl transition duration-300 group-hover:-rotate-6 group-hover:scale-110"
               style={{ backgroundColor: `${meta.color}26` }}
               aria-hidden="true"
             >
@@ -123,7 +123,7 @@ export default function ExpenseList({
                 disabled={isDeleting}
                 className={`h-8 rounded-full border-2 text-sm font-semibold transition sm:h-9 ${
                   isConfirming
-                    ? 'border-tomato bg-tomato px-3 text-white'
+                    ? 'animate-pop border-tomato bg-tomato px-3 text-white'
                     : 'w-8 border-ink/10 bg-surface text-ink hover:border-tomato hover:text-tomato sm:w-9'
                 }`}
                 aria-label={isConfirming ? `Confirm delete ${expense.name}` : `Delete ${expense.name}`}
