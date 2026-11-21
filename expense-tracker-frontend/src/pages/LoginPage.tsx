@@ -18,6 +18,10 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  // Fields stay read-only until the user focuses one, so the browser doesn't auto-fill saved
+  // credentials on page load/refresh. Saved logins are still offered once a field is clicked.
+  const [fieldsUnlocked, setFieldsUnlocked] = useState(false)
+  const unlockFields = () => setFieldsUnlocked(true)
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -79,6 +83,9 @@ export default function LoginPage() {
           name="email"
           type="email"
           autoComplete="email"
+          readOnly={!fieldsUnlocked}
+          onPointerDown={unlockFields}
+          onFocus={unlockFields}
           placeholder="you@example.com"
           required
           value={email}
@@ -88,6 +95,9 @@ export default function LoginPage() {
           label="Password"
           name="password"
           autoComplete="current-password"
+          readOnly={!fieldsUnlocked}
+          onPointerDown={unlockFields}
+          onFocus={unlockFields}
           placeholder="Your password"
           labelAction={
             <Link
