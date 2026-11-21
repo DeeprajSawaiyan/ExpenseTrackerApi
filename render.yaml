@@ -34,11 +34,12 @@ services:
         fromDatabase:
           name: expense-tracker-db
           property: password
+      # Allowed browser origins (CORS), comma-separated: the Render static site and GitHub Pages
       - key: FRONTEND_URL
-        value: https://deeprajsawaiyan.github.io
-      # Base URL for links in emails (password reset)
+        value: https://expensetrackerapi-ef5t.onrender.com,https://deeprajsawaiyan.github.io
+      # Where links in emails (password reset) point — the frontend users actually use
       - key: FRONTEND_BASE_URL
-        value: https://deeprajsawaiyan.github.io/ExpenseTrackerApi
+        value: https://expensetrackerapi-ef5t.onrender.com
       # Password reset emails. Render's FREE plan blocks outbound SMTP (ports 25/465/587),
       # so on free instances use Brevo's HTTP API: set BREVO_API_KEY and MAIL_FROM (a sender
       # verified in Brevo). The MAIL_HOST/USERNAME/PASSWORD SMTP settings only work on paid instances.

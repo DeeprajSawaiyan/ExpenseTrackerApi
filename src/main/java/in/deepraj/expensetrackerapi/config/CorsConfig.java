@@ -25,8 +25,15 @@ public class CorsConfig {
 				"http://localhost:5173",
 				"http://localhost:3000"));
 
-		if (frontendUrl != null && !frontendUrl.trim().isEmpty()) {
-			allowedOrigins.add(frontendUrl.trim());
+		// FRONTEND_URL may list several origins, comma-separated
+		// (e.g. "https://my-app.onrender.com,https://me.github.io"). Origins have no path or trailing slash.
+		if (frontendUrl != null) {
+			for (String origin : frontendUrl.split(",")) {
+				String trimmed = origin.trim().replaceAll("/+$", "");
+				if (!trimmed.isEmpty() && !allowedOrigins.contains(trimmed)) {
+					allowedOrigins.add(trimmed);
+				}
+			}
 		}
 
 		configuration.setAllowedOrigins(allowedOrigins);

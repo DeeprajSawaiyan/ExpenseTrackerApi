@@ -2,30 +2,39 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Expense Tracker</title>
+    <title>ExpTrack</title>
     <script>
-      // GitHub Pages SPA fallback for /ExpenseTrackerApi/ project site
-      var pathSegmentsToKeep = 1
-      var location = window.location
-      location.replace(
-        location.protocol +
-          '//' +
-          location.hostname +
-          (location.port ? ':' + location.port : '') +
-          location.pathname
-            .split('/')
-            .slice(0, 1 + pathSegmentsToKeep)
-            .join('/') +
-          '/?/' +
-          location.pathname
-            .slice(1)
-            .split('/')
-            .slice(pathSegmentsToKeep)
-            .join('/')
-            .replace(/&/g, '~and~') +
-          (location.search ? '&' + location.search.slice(1).replace(/&/g, '~and~') : '') +
-          location.hash,
-      )
+      // SPA fallback for static hosts that serve this file for unknown paths (e.g. refreshing /login).
+      // It redirects to the app root as "/?/login"; index.html then restores "/login" in the address bar.
+      ;(function (l) {
+        // GitHub Pages project sites live under "/<repo>/" — keep that one segment.
+        // Everywhere else (Render, custom domains) the app lives at "/".
+        var pathSegmentsToKeep = /\.github\.io$/.test(l.hostname) ? 1 : 0
+        var base = l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/')
+
+        // Loop guard: if we already redirected once and still landed here, go to the app root
+        // instead of nesting the URL again (which produced ".../?/&/~and~/~and~/...").
+        if (l.search.indexOf('?/') === 0) {
+          l.replace(l.protocol + '//' + l.host + base + '/')
+          return
+        }
+
+        l.replace(
+          l.protocol +
+            '//' +
+            l.host +
+            base +
+            '/?/' +
+            l.pathname
+              .slice(1)
+              .split('/')
+              .slice(pathSegmentsToKeep)
+              .join('/')
+              .replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash,
+        )
+      })(window.location)
     </script>
   </head>
   <body></body>
