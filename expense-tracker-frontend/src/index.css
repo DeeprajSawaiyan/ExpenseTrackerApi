@@ -2,7 +2,123 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  min-height: 100vh;
+@layer base {
+  /* Theme colors as RGB channels (see tailwind.config.js). Light is the default. */
+  :root,
+  .theme-light {
+    --color-ink: 29 27 35; /* #1D1B23 */
+    --color-ink-soft: 74 71 82;
+    --color-ink-muted: 124 121 133;
+    --color-cream: 255 248 241; /* #FFF8F1 */
+    --color-cream-dark: 244 234 223;
+    --color-surface: 255 255 255;
+    --color-tomato-dark: 222 74 49; /* #DE4A31 */
+    --color-tomato-soft: 253 227 221;
+    --color-mustard-soft: 255 243 209;
+    --color-leaf-soft: 221 240 228;
+    --color-leaf-text: 33 122 70; /* #217A46 */
+    color-scheme: light;
+  }
+
+  .dark {
+    --color-ink: 245 239 231; /* warm off-white text */
+    --color-ink-soft: 200 195 205;
+    --color-ink-muted: 150 145 160;
+    --color-cream: 18 16 23; /* #121017 page */
+    --color-cream-dark: 38 35 46;
+    --color-surface: 29 27 36; /* #1D1B24 cards */
+    --color-tomato-dark: 255 128 107; /* lighter tomato for text on dark */
+    --color-tomato-soft: 58 30 27;
+    --color-mustard-soft: 54 45 20;
+    --color-leaf-soft: 20 45 30;
+    --color-leaf-text: 120 214 158;
+    color-scheme: dark;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply m-0 min-h-screen bg-cream font-sans text-ink transition-colors duration-300;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-tomato ring-offset-2 ring-offset-cream;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Headlines: heavy, tightly tracked */
+  .headline {
+    @apply font-display font-extrabold leading-[0.95] tracking-tightest;
+  }
+
+  /* Buttons — pill shaped, with a subtle press effect */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold
+      transition duration-150 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100;
+  }
+  .btn-ink {
+    @apply btn bg-ink text-surface hover:bg-ink-soft;
+  }
+  .btn-tomato {
+    @apply btn bg-tomato text-white hover:bg-[#DE4A31];
+  }
+  .btn-ghost {
+    @apply btn border border-ink/15 bg-surface text-ink hover:border-ink/30 hover:bg-cream-dark;
+  }
+  .btn-danger {
+    @apply btn border border-tomato/30 bg-surface text-tomato-dark hover:bg-tomato-soft;
+  }
+  .btn-sm {
+    @apply px-3.5 py-1.5 text-xs;
+  }
+
+  /* Surfaces */
+  .card {
+    @apply rounded-3xl border border-ink/5 bg-surface shadow-card;
+  }
+
+  /* Form controls */
+  .field {
+    @apply w-full rounded-2xl border-2 border-ink/10 bg-surface px-4 py-3 text-ink placeholder:text-ink-muted/70
+      transition focus:border-ink focus:outline-none focus:ring-0 disabled:opacity-60;
+  }
+  .field-error {
+    @apply border-tomato focus:border-tomato;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-semibold text-ink;
+  }
+
+  /* Small uppercase eyebrow text */
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.12em] text-ink-muted;
+  }
+
+  /* Selectable pill (filters, categories) */
+  .chip {
+    @apply inline-flex cursor-pointer select-none items-center gap-2 rounded-full border-2 border-ink/10 bg-surface px-3.5 py-1.5
+      text-sm font-semibold text-ink transition hover:border-ink/40 active:scale-[0.97];
+  }
+  .chip-active {
+    @apply border-ink bg-ink text-surface hover:border-ink;
+  }
 }

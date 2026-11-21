@@ -33,6 +33,15 @@ jobs:
           cache: npm
           cache-dependency-path: expense-tracker-frontend/package-lock.json
 
+      - name: Check API URL secret
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "::error::Repository secret VITE_API_BASE_URL is not set. Add it under Settings > Secrets and variables > Actions (e.g. https://<your-render-service>.onrender.com/api/v1)."
+            exit 1
+          fi
+
       - name: Install and build
         env:
           GITHUB_PAGES: 'true'

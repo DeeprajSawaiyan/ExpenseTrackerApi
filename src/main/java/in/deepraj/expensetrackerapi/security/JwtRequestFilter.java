@@ -15,7 +15,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import in.deepraj.expensetrackerapi.util.JwtTokenUtil;
-import io.jsonwebtoken.ExpiredJwtException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
+import io.jsonwebtoken.JwtException;
 
 public class JwtRequestFilter extends OncePerRequestFilter {
 
@@ -38,21 +40,29 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 			
 			jwtToken = requestTokenHeader.substring(7);
 			
+			// An invalid/expired token is treated as "not logged in" rather than an error, so public
+			// endpoints (login, register, forgot/reset password) still work with a stale token.
+			// Protected endpoints then return 401 via Spring Security.
 			try {
 				username = jwtTokenUtil.getUsernameFromToken(jwtToken);
-			} catch (IllegalArgumentException e) {
-				throw new RuntimeException("Unable to get JWT token");
-			} catch (ExpiredJwtException e) {
-				throw new RuntimeException("Jwt token has expired");
+			} catch (JwtException | IllegalArgumentException e) {
+				username = null;
 			}
-			
+
 		}
-		
+
 		//Once we get the token, validate the token
 		if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			
-			UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-			
+
+			UserDetails userDetails;
+			try {
+				userDetails = userDetailsService.loadUserByUsername(username);
+			} catch (UsernameNotFoundException e) {
+				// Token belongs to a deleted account
+				filterChain.doFilter(request, response);
+				return;
+			}
+
 			if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
 				
 				UsernamePasswordAuthenticationToken authToken = 

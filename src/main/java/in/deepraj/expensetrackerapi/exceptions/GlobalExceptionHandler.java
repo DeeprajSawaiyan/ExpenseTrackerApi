@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -49,6 +50,34 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler{
 		return new ResponseEntity<ErrorObject>(errorObject, HttpStatus.BAD_REQUEST);
 	}
 	
+	@ExceptionHandler(InvalidTokenException.class)
+	public ResponseEntity<ErrorObject> handleInvalidTokenException(InvalidTokenException ex, WebRequest request) {
+
+		ErrorObject errorObject = new ErrorObject();
+
+		errorObject.setStatusCode(HttpStatus.BAD_REQUEST.value());
+
+		errorObject.setMessage(ex.getMessage());
+
+		errorObject.setTimestamp(new Date());
+
+		return new ResponseEntity<ErrorObject>(errorObject, HttpStatus.BAD_REQUEST);
+	}
+
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<ErrorObject> handleAuthenticationException(AuthenticationException ex, WebRequest request) {
+
+		ErrorObject errorObject = new ErrorObject();
+
+		errorObject.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+
+		errorObject.setMessage(ex.getMessage());
+
+		errorObject.setTimestamp(new Date());
+
+		return new ResponseEntity<ErrorObject>(errorObject, HttpStatus.UNAUTHORIZED);
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorObject> handleGeneralException(Exception ex, WebRequest request) {
 		

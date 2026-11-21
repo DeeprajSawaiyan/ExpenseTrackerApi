@@ -2,7 +2,9 @@ import { isAxiosError } from 'axios'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getExpenseById, updateExpense } from '../api/expenseApi'
+import ErrorAlert from '../components/ErrorAlert'
 import ExpenseForm, { type ExpenseFormData } from '../components/ExpenseForm'
+import PageHeader from '../components/PageHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
 import { useAlert } from '../context/AlertContext'
 import { usePageTitle } from '../hooks/usePageTitle'
@@ -92,16 +94,19 @@ export default function EditExpensePage() {
 
   if (notFound) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
-        <h2 className="text-lg font-medium text-slate-900">Expense not found</h2>
-        <p className="mt-2 text-slate-600">
-          The expense you are looking for does not exist or may have been deleted.
-        </p>
-        <Link
-          to="/dashboard"
-          className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+      <div className="card mx-auto flex max-w-lg animate-fade-up flex-col items-center px-6 py-14 text-center">
+        <div
+          className="grid h-20 w-20 place-items-center rounded-full border-[10px] border-mustard bg-surface text-2xl"
+          aria-hidden="true"
         >
-          Back to Dashboard
+          🤷
+        </div>
+        <h1 className="headline mt-5 text-3xl">Expense not found.</h1>
+        <p className="mt-2 text-ink-soft">
+          It doesn’t exist, or it may already have been deleted.
+        </p>
+        <Link to="/dashboard" className="btn-ink mt-6">
+          Back to dashboard
         </Link>
       </div>
     )
@@ -110,22 +115,23 @@ export default function EditExpensePage() {
   if (!expense) {
     return (
       <div>
-        <h2 className="mb-4 text-lg font-medium text-slate-900">Edit Expense</h2>
-        {apiError && (
-          <div className="mb-4">
-            <p className="text-sm text-red-600">{apiError}</p>
-            <Link to="/dashboard" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
-              Back to Dashboard
-            </Link>
-          </div>
-        )}
+        <PageHeader backTo="/dashboard" eyebrow="Edit expense" title="Something went wrong." />
+        {apiError && <ErrorAlert message={apiError} />}
       </div>
     )
   }
 
   return (
     <div>
-      <h2 className="mb-6 text-lg font-medium text-slate-900">Edit Expense</h2>
+      <PageHeader
+        backTo="/dashboard"
+        eyebrow="Edit expense"
+        title={
+          <>
+            Update <span className="text-tomato">{expense.name}</span>
+          </>
+        }
+      />
       <ExpenseForm
         mode="edit"
         initialValues={expense}

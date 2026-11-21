@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createExpense } from '../api/expenseApi'
 import ExpenseForm, { type ExpenseFormData } from '../components/ExpenseForm'
+import PageHeader from '../components/PageHeader'
 import { useAlert } from '../context/AlertContext'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { getErrorMessage } from '../utils/errorMessage'
@@ -35,7 +36,15 @@ export default function AddExpensePage() {
 
   return (
     <div>
-      <h2 className="mb-6 text-lg font-medium text-slate-900">Add Expense</h2>
+      <PageHeader
+        backTo="/dashboard"
+        eyebrow="New expense"
+        title={
+          <>
+            What did you <span className="text-tomato">spend on?</span>
+          </>
+        }
+      />
       <ExpenseForm
         mode="create"
         onSubmit={handleSubmit}

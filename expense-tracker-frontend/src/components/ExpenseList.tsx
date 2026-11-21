@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Expense } from '../types'
-import { formatCurrency, formatDate } from '../utils/formatters'
+import { getCategoryMeta } from '../utils/categories'
+import { formatCurrencyShort, formatDate } from '../utils/formatters'
 
 interface ExpenseListProps {
   expenses: Expense[]
@@ -15,34 +17,40 @@ export default function ExpenseList({
   onDelete,
   hasActiveFilters = false,
 }: ExpenseListProps) {
-  function handleDelete(expense: Expense) {
-    if (!expense.id) {
-      return
-    }
+  // Two-tap delete: first tap asks "Sure?", second tap deletes
+  const [confirmingId, setConfirmingId] = useState<number | null>(null)
 
-    const confirmed = window.confirm(`Delete expense "${expense.name}"?`)
-    if (confirmed) {
+  function handleDelete(expense: Expense) {
+    if (!expense.id) return
+
+    if (confirmingId === expense.id) {
+      setConfirmingId(null)
       onDelete(expense.id)
+    } else {
+      setConfirmingId(expense.id)
     }
   }
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <h3 className="text-lg font-medium text-slate-900">
-          {hasActiveFilters ? 'No matching expenses' : 'No expenses yet'}
+      <div className="card flex flex-col items-center px-6 py-14 text-center">
+        <div
+          className="grid h-20 w-20 place-items-center rounded-full border-[10px] border-mustard bg-surface text-2xl"
+          aria-hidden="true"
+        >
+          {hasActiveFilters ? '🔍' : '🧾'}
+        </div>
+        <h3 className="headline mt-5 text-3xl">
+          {hasActiveFilters ? 'Nothing matches.' : 'Nothing logged yet.'}
         </h3>
-        <p className="mt-2 text-slate-600">
+        <p className="mt-2 max-w-sm text-ink-soft">
           {hasActiveFilters
-            ? 'Try changing your filters or clear them to see all expenses.'
-            : 'Start tracking your spending by adding your first expense.'}
+            ? 'Try a different filter, or clear filters to see everything.'
+            : 'Add your first expense and your spending ring will start to fill up.'}
         </p>
         {!hasActiveFilters && (
-          <Link
-            to="/expenses/new"
-            className="mt-6 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Add your first expense
+          <Link to="/expenses/new" className="btn-tomato mt-6">
+            ＋ Add your first expense
           </Link>
         )}
       </div>
@@ -50,82 +58,83 @@ export default function ExpenseList({
   }
 
   return (
-    <>
-      <div className="hidden overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm md:block">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Name</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Category</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Amount</th>
-              <th className="px-4 py-3 text-left font-medium text-slate-600">Date</th>
-              <th className="px-4 py-3 text-right font-medium text-slate-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200">
-            {expenses.map((expense) => (
-              <tr key={expense.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{expense.name}</td>
-                <td className="px-4 py-3 text-slate-600">{expense.category}</td>
-                <td className="px-4 py-3 text-slate-900">{formatCurrency(expense.amount)}</td>
-                <td className="px-4 py-3 text-slate-600">{formatDate(expense.date)}</td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex justify-end gap-2">
-                    <Link
-                      to={`/expenses/${expense.id}/edit`}
-                      className="rounded-md border border-slate-300 px-2.5 py-1 text-slate-700 hover:bg-slate-100"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(expense)}
-                      disabled={deletingId === expense.id}
-                      className="rounded-md border border-red-200 px-2.5 py-1 text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      {deletingId === expense.id ? 'Deleting...' : 'Delete'}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <ul className="card divide-y divide-ink/5 overflow-hidden">
+      {expenses.map((expense, index) => {
+        const meta = getCategoryMeta(expense.category)
+        const isDeleting = deletingId === expense.id
+        const isConfirming = confirmingId === expense.id
 
-      <div className="space-y-4 md:hidden">
-        {expenses.map((expense) => (
-          <div
+        return (
+          <li
             key={expense.id}
-            className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+            style={{ animationDelay: `${Math.min(index, 10) * 30}ms` }}
+            className={`group flex animate-fade-up items-center gap-3 px-4 py-3.5 transition hover:bg-cream sm:gap-4 sm:px-5 ${
+              isDeleting ? 'opacity-50' : ''
+            }`}
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h3 className="font-medium text-slate-900">{expense.name}</h3>
-                <p className="mt-1 text-sm text-slate-600">{expense.category}</p>
+            <span
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl text-xl"
+              style={{ backgroundColor: `${meta.color}26` }}
+              aria-hidden="true"
+            >
+              {meta.emoji}
+            </span>
+
+            <div className="min-w-0 flex-1 sm:flex sm:items-center sm:gap-4">
+              {/* Name + meta (amount sits beside the name on mobile) */}
+              <div className="min-w-0 sm:flex-1">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="truncate font-semibold text-ink">{expense.name}</p>
+                  <p className="shrink-0 font-display text-base font-bold tracking-tight text-ink sm:hidden">
+                    {formatCurrencyShort(expense.amount)}
+                  </p>
+                </div>
+                <p className="mt-0.5 flex min-w-0 items-center gap-x-2 overflow-hidden whitespace-nowrap text-sm text-ink-muted">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: meta.color }} />
+                    {expense.category}
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>{formatDate(expense.date)}</span>
+                  {expense.description && (
+                    <span className="hidden min-w-0 truncate md:inline">· {expense.description}</span>
+                  )}
+                </p>
               </div>
-              <p className="font-medium text-slate-900">{formatCurrency(expense.amount)}</p>
+
+              <p className="hidden shrink-0 font-display text-lg font-bold tracking-tight text-ink sm:block">
+                {formatCurrencyShort(expense.amount)}
+              </p>
             </div>
-            <p className="mt-2 text-sm text-slate-500">{formatDate(expense.date)}</p>
-            <div className="mt-4 flex gap-2">
+
+            <div className="flex shrink-0 gap-1.5 self-center sm:opacity-60 sm:transition sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
               <Link
                 to={`/expenses/${expense.id}/edit`}
-                className="flex-1 rounded-md border border-slate-300 px-3 py-2 text-center text-sm text-slate-700 hover:bg-slate-100"
+                className="grid h-8 w-8 place-items-center rounded-full border-2 border-ink/10 bg-surface text-sm transition hover:border-ink sm:h-9 sm:w-9"
+                aria-label={`Edit ${expense.name}`}
+                title="Edit"
               >
-                Edit
+                ✎
               </Link>
               <button
                 type="button"
                 onClick={() => handleDelete(expense)}
-                disabled={deletingId === expense.id}
-                className="flex-1 rounded-md border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                onBlur={() => isConfirming && setConfirmingId(null)}
+                disabled={isDeleting}
+                className={`h-8 rounded-full border-2 text-sm font-semibold transition sm:h-9 ${
+                  isConfirming
+                    ? 'border-tomato bg-tomato px-3 text-white'
+                    : 'w-8 border-ink/10 bg-surface text-ink hover:border-tomato hover:text-tomato sm:w-9'
+                }`}
+                aria-label={isConfirming ? `Confirm delete ${expense.name}` : `Delete ${expense.name}`}
+                title="Delete"
               >
-                {deletingId === expense.id ? 'Deleting...' : 'Delete'}
+                {isDeleting ? '…' : isConfirming ? 'Sure?' : '🗑'}
               </button>
             </div>
-          </div>
-        ))}
-      </div>
-    </>
+          </li>
+        )
+      })}
+    </ul>
   )
 }

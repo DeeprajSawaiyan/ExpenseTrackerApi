@@ -36,3 +36,21 @@ services:
           property: password
       - key: FRONTEND_URL
         value: https://deeprajsawaiyan.github.io
+      # Base URL for links in emails (password reset)
+      - key: FRONTEND_BASE_URL
+        value: https://deeprajsawaiyan.github.io/ExpenseTrackerApi
+      # Password reset emails. Render's FREE plan blocks outbound SMTP (ports 25/465/587),
+      # so on free instances use Brevo's HTTP API: set BREVO_API_KEY and MAIL_FROM (a sender
+      # verified in Brevo). The MAIL_HOST/USERNAME/PASSWORD SMTP settings only work on paid instances.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_HOST
+        sync: false
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false

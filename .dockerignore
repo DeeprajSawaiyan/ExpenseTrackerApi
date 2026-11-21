@@ -3,3 +3,7 @@ target/
 .idea/
 *.iml
 .DS_Store
+data/
+local-mail.properties
+expense-tracker-frontend/
+*.log

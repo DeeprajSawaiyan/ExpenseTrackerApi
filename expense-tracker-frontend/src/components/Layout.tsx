@@ -1,13 +1,28 @@
 import { useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
+import ThemeToggle from './ThemeToggle'
+
+const NAV_ITEMS = [
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/profile', label: 'Profile' },
+]
 
 function navLinkClass({ isActive }: { isActive: boolean }) {
-  return `block rounded-md px-3 py-2 text-sm ${
-    isActive
-      ? 'bg-blue-50 font-medium text-blue-600'
-      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+  return `rounded-full px-4 py-2 text-sm font-semibold transition ${
+    isActive ? 'bg-ink text-surface' : 'text-ink-soft hover:bg-ink/5 hover:text-ink'
   }`
+}
+
+function initials(name?: string) {
+  if (!name) return '?'
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('')
 }
 
 export default function Layout() {
@@ -21,72 +36,100 @@ export default function Layout() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-5xl px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">Expense Tracker</h1>
+    <div className="min-h-screen bg-cream">
+      <header className="sticky top-0 z-40 border-b border-ink/5 bg-cream/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+          <Link to="/dashboard" aria-label="ExpTrack home">
+            <Logo />
+          </Link>
 
-            <button
-              type="button"
-              className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 md:hidden"
-              onClick={() => setIsMenuOpen((open) => !open)}
-              aria-expanded={isMenuOpen}
-              aria-controls="main-navigation"
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Main">
+            {NAV_ITEMS.map((item) => (
+              <NavLink key={item.to} to={item.to} className={navLinkClass}>
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="hidden items-center gap-3 md:flex">
+            <ThemeToggle labelsClassName="hidden lg:inline" className="mr-1" />
+            <Link to="/expenses/new" className="btn-ink">
+              <span aria-hidden="true">＋</span> Add expense
+            </Link>
+            <Link
+              to="/profile"
+              className="grid h-10 w-10 place-items-center rounded-full bg-tomato font-display text-sm font-bold text-white transition hover:scale-105"
+              title={user?.name}
+              aria-label="Your profile"
             >
-              {isMenuOpen ? 'Close' : 'Menu'}
+              {initials(user?.name)}
+            </Link>
+            <button type="button" onClick={handleLogout} className="btn-ghost btn-sm">
+              Log out
             </button>
-
-            <div className="hidden items-center gap-4 text-sm md:flex">
-              {user && (
-                <span className="text-slate-600">
-                  Hi, <span className="font-medium text-slate-900">{user.name}</span>
-                </span>
-              )}
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-slate-700 transition hover:bg-slate-100"
-              >
-                Logout
-              </button>
-            </div>
           </div>
 
-          <nav
-            id="main-navigation"
-            className={`${isMenuOpen ? 'mt-4 block' : 'hidden'} md:mt-4 md:block`}
-          >
-            <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-              <div className="flex flex-col gap-1 md:flex-row md:gap-2">
-                <NavLink to="/dashboard" className={navLinkClass} onClick={() => setIsMenuOpen(false)}>
-                  Dashboard
-                </NavLink>
-                <NavLink to="/profile" className={navLinkClass} onClick={() => setIsMenuOpen(false)}>
-                  Profile
-                </NavLink>
-              </div>
+          <div className="flex items-center gap-3 md:hidden">
+            <ThemeToggle showLabels={false} />
+            <button
+              type="button"
+              className="grid h-10 w-10 place-items-center rounded-full border-2 border-ink/10 bg-surface"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+            >
+              <span className="relative block h-3 w-4" aria-hidden="true">
+                <span
+                  className={`absolute left-0 top-0 h-0.5 w-4 rounded bg-ink transition ${
+                    isMenuOpen ? 'top-1.5 rotate-45' : ''
+                  }`}
+                />
+                <span
+                  className={`absolute bottom-0 left-0 h-0.5 w-4 rounded bg-ink transition ${
+                    isMenuOpen ? 'bottom-[5px] -rotate-45' : ''
+                  }`}
+                />
+              </span>
+            </button>
+          </div>
+        </div>
 
-              <div className="mt-3 flex flex-col gap-2 border-t border-slate-200 pt-3 md:hidden">
-                {user && (
-                  <span className="px-3 text-sm text-slate-600">
-                    Hi, <span className="font-medium text-slate-900">{user.name}</span>
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="rounded-md border border-slate-300 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
-                >
-                  Logout
-                </button>
-              </div>
+        {isMenuOpen && (
+          <nav
+            id="mobile-navigation"
+            className="animate-fade-up border-t border-ink/5 px-4 pb-5 pt-3 md:hidden"
+            aria-label="Mobile"
+            onClick={(event) => {
+              // Close the menu after following any link or button inside it
+              if ((event.target as HTMLElement).closest('a, button')) setIsMenuOpen(false)
+            }}
+          >
+            {user && (
+              <p className="mb-3 px-1 text-sm text-ink-muted">
+                Signed in as <span className="font-semibold text-ink">{user.name}</span>
+              </p>
+            )}
+            <div className="flex flex-col gap-1">
+              {NAV_ITEMS.map((item) => (
+                <NavLink key={item.to} to={item.to} className={navLinkClass}>
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Link to="/expenses/new" className="btn-ink">
+                ＋ Add expense
+              </Link>
+              <button type="button" onClick={handleLogout} className="btn-ghost">
+                Log out
+              </button>
             </div>
           </nav>
-        </div>
+        )}
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
         <Outlet />
       </main>
     </div>

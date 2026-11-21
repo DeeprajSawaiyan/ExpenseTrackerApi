@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import AuthShell from '../components/AuthShell'
+import ErrorAlert from '../components/ErrorAlert'
 import FormInput from '../components/FormInput'
-import { useAlert } from '../context/AlertContext'
+import PasswordInput from '../components/PasswordInput'
 import { useAuth } from '../context/AuthContext'
 import { usePageTitle } from '../hooks/usePageTitle'
 import { focusFirstErrorField } from '../utils/focusFirstError'
@@ -15,13 +17,14 @@ interface FieldErrors {
   age?: string
 }
 
+const FIELD_ORDER: (keyof FieldErrors)[] = ['name', 'email', 'password', 'confirmPassword', 'age']
+
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 }
 
 export default function RegisterPage() {
   const { register } = useAuth()
-  const { showError } = useAlert()
   const navigate = useNavigate()
 
   usePageTitle('Register')
@@ -32,6 +35,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [age, setAge] = useState('')
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [apiError, setApiError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   function validateForm(): FieldErrors {
@@ -43,7 +47,7 @@ export default function RegisterPage() {
 
     if (!email.trim()) {
       errors.email = 'Email is required'
-    } else if (!validateEmail(email)) {
+    } else if (!validateEmail(email.trim())) {
       errors.email = 'Enter a valid email'
     }
 
@@ -62,7 +66,7 @@ export default function RegisterPage() {
     const ageNumber = Number(age)
     if (!age.trim()) {
       errors.age = 'Age is required'
-    } else if (Number.isNaN(ageNumber) || ageNumber < 0) {
+    } else if (!Number.isInteger(ageNumber) || ageNumber < 0 || ageNumber > 130) {
       errors.age = 'Enter a valid age'
     }
 
@@ -71,12 +75,13 @@ export default function RegisterPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setApiError('')
 
     const errors = validateForm()
     setFieldErrors(errors)
 
     if (Object.keys(errors).length > 0) {
-      focusFirstErrorField(['name', 'email', 'password', 'confirmPassword', 'age'])
+      focusFirstErrorField(FIELD_ORDER.filter((field) => errors[field]))
       return
     }
 
@@ -86,88 +91,89 @@ export default function RegisterPage() {
       await register(name.trim(), email.trim(), password, Number(age))
       navigate('/dashboard', { replace: true })
     } catch (err) {
-      showError(getErrorMessage(err))
+      setApiError(getErrorMessage(err))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-md sm:p-8">
-        <h1 className="mb-2 text-center text-2xl font-semibold text-slate-900">
-          Expense Tracker
-        </h1>
-        <p className="mb-6 text-center text-slate-600">Create your account</p>
+    <AuthShell
+      title="Let’s get started."
+      subtitle="Create your free account — it takes less than a minute."
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link to="/login" className="font-semibold text-tomato-dark hover:underline">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} noValidate>
+        {apiError && <ErrorAlert message={apiError} onDismiss={() => setApiError('')} />}
 
-        <form onSubmit={handleSubmit} noValidate>
+        <div className="grid gap-x-4 sm:grid-cols-[1fr_7rem]">
           <FormInput
             label="Name"
             name="name"
             type="text"
             autoComplete="name"
+            placeholder="Your name"
             required
             value={name}
             error={fieldErrors.name}
             onChange={(e) => setName(e.target.value)}
           />
           <FormInput
-            label="Email"
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            error={fieldErrors.email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <FormInput
-            label="Password"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={password}
-            error={fieldErrors.password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <FormInput
-            label="Confirm Password"
-            name="confirmPassword"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={confirmPassword}
-            error={fieldErrors.confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
-          <FormInput
             label="Age"
             name="age"
             type="number"
+            inputMode="numeric"
             min={0}
+            placeholder="25"
             required
             value={age}
             error={fieldErrors.age}
             onChange={(e) => setAge(e.target.value)}
           />
+        </div>
+        <FormInput
+          label="Email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          required
+          value={email}
+          error={fieldErrors.email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <PasswordInput
+          label="Password"
+          name="password"
+          autoComplete="new-password"
+          placeholder="At least 5 characters"
+          required
+          value={password}
+          error={fieldErrors.password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <PasswordInput
+          label="Confirm password"
+          name="confirmPassword"
+          autoComplete="new-password"
+          placeholder="Type it again"
+          required
+          value={confirmPassword}
+          error={fieldErrors.confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-2 w-full rounded-md bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? 'Creating account...' : 'Create account'}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-500">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-blue-600 hover:underline">
-            Login
-          </Link>
-        </p>
-      </div>
-    </div>
+        <button type="submit" disabled={isSubmitting} className="btn-ink mt-2 w-full py-3.5 text-base">
+          {isSubmitting ? 'Creating account…' : 'Create account →'}
+        </button>
+      </form>
+    </AuthShell>
   )
 }

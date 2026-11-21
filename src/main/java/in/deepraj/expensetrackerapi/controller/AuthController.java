@@ -50,16 +50,16 @@ public class AuthController {
 		return new ResponseEntity<JwtResponse>(new JwtResponse(token), HttpStatus.OK);
 	}
 	
-	private void authenticate(String email, String password) throws Exception {
-		
+	private void authenticate(String email, String password) {
+
 		try {
 			authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 		} catch (DisabledException e) {
-			throw new Exception("User disabled");
+			throw new DisabledException("User disabled", e);
 		} catch (BadCredentialsException e) {
-			throw new Exception("Bad Credentials");
+			throw new BadCredentialsException("Invalid email or password", e);
 		}
-		
+
 	}
 
 	@PostMapping("/register")

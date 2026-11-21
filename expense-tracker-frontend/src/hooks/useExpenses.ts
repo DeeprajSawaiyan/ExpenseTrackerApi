@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import * as expenseApi from '../api/expenseApi'
 import type { Expense } from '../types'
 import { getErrorMessage } from '../utils/errorMessage'
@@ -67,7 +67,12 @@ export function useExpenses() {
 
   const hasActiveFilters = filters.mode !== 'all'
 
+  // Incremented on every fetch so a slow, outdated response can't overwrite newer results
+  const requestIdRef = useRef(0)
+
   const fetchExpenses = useCallback(async () => {
+    const requestId = ++requestIdRef.current
+
     if (!canFetchWithFilters(filters)) {
       setExpenses([])
       setIsLoading(false)
@@ -80,11 +85,17 @@ export function useExpenses() {
 
     try {
       const data = await fetchByFilters(filters, page, PAGE_SIZE)
-      setExpenses(data)
+      if (requestId === requestIdRef.current) {
+        setExpenses(data)
+      }
     } catch (err) {
-      setError(getErrorMessage(err))
+      if (requestId === requestIdRef.current) {
+        setError(getErrorMessage(err))
+      }
     } finally {
-      setIsLoading(false)
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [filters, page])
 

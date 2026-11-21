@@ -58,28 +58,35 @@ export function AlertProvider({ children }: { children: ReactNode }) {
   return (
     <AlertContext.Provider value={value}>
       {alert && (
-        <div
-          className={`fixed inset-x-0 top-0 z-50 border-b px-4 py-3 text-center text-sm font-medium shadow-md ${
-            alert.type === 'success'
-              ? 'border-green-200 bg-green-50 text-green-800'
-              : 'border-red-200 bg-red-50 text-red-800'
-          }`}
-          role="alert"
-        >
-          <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
+        <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4">
+          <div
+            key={alert.message}
+            className={`pointer-events-auto flex w-full max-w-md animate-slide-down items-center gap-3 rounded-full py-2.5 pl-3 pr-2 text-sm font-semibold shadow-lift ${
+              alert.type === 'success' ? 'bg-leaf text-white' : 'bg-night text-white dark:ring-1 dark:ring-white/15'
+            }`}
+            role={alert.type === 'error' ? 'alert' : 'status'}
+          >
+            <span
+              className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs ${
+                alert.type === 'success' ? 'bg-white/20' : 'bg-tomato'
+              }`}
+              aria-hidden="true"
+            >
+              {alert.type === 'success' ? '✓' : '!'}
+            </span>
             <span className="flex-1">{alert.message}</span>
             <button
               type="button"
               onClick={clearAlert}
-              className="shrink-0 text-current opacity-70 hover:opacity-100"
+              className="grid h-7 w-7 shrink-0 place-items-center rounded-full opacity-70 transition hover:bg-white/15 hover:opacity-100"
               aria-label="Dismiss alert"
             >
-              ×
+              ✕
             </button>
           </div>
         </div>
       )}
-      <div className={alert ? 'pt-12' : undefined}>{children}</div>
+      {children}
     </AlertContext.Provider>
   )
 }

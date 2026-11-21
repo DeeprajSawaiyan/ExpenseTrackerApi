@@ -5,6 +5,17 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/** Whole-rupee format for large headline numbers, e.g. "₹9,429". Keeps paise only when non-zero. */
+export function formatCurrencyShort(amount: number): string {
+  const hasPaise = Math.round(amount * 100) % 100 !== 0
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: hasPaise ? 2 : 0,
+  }).format(amount)
+}
+
 export function formatDate(date: string): string {
   return new Intl.DateTimeFormat('en-IN', {
     dateStyle: 'medium',

@@ -6,10 +6,12 @@ import PublicRoute from './components/PublicRoute'
 import AddExpensePage from './pages/AddExpensePage'
 import DashboardPage from './pages/DashboardPage'
 import EditExpensePage from './pages/EditExpensePage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import LoginPage from './pages/LoginPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
 import RegisterPage from './pages/RegisterPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 
 function App() {
   const routerBasename = import.meta.env.BASE_URL.replace(/\/$/, '') || undefined
@@ -22,7 +24,11 @@ function App() {
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         </Route>
+
+        {/* Reachable from the email link whether or not someone is signed in on this browser */}
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>

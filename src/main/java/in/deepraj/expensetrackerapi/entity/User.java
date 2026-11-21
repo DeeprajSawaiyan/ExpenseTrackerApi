@@ -47,6 +47,24 @@ public class User {
 	@UpdateTimestamp
 	private Timestamp updatedAt;
 
+	/**
+	 * Embedded in every JWT. Incrementing it signs the user out on all devices
+	 * (done on password reset). Null for rows created before this column existed.
+	 */
+	@JsonIgnore
+	@Column(name = "token_version")
+	private Long tokenVersion = 0L;
+
+	@JsonIgnore
+	public long getTokenVersionOrZero() {
+		return tokenVersion == null ? 0L : tokenVersion;
+	}
+
+	/** Invalidates every JWT issued so far for this user. */
+	public void revokeAllTokens() {
+		tokenVersion = getTokenVersionOrZero() + 1;
+	}
+
 }
 
 

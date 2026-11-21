@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import in.deepraj.expensetrackerapi.security.AppUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -21,9 +22,12 @@ public class JwtTokenUtil {
 	@Value("${jwt.secret}")
 	private String secret;
 
+	private static final String VERSION_CLAIM = "ver";
+
 	public String generateToken(UserDetails userDetails) {
 		Map<String, Object> claims = new HashMap<>();
-		
+		claims.put(VERSION_CLAIM, tokenVersionOf(userDetails));
+
 		return Jwts.builder()
 			.setClaims(claims)
 			.setSubject(userDetails.getUsername())
@@ -47,9 +51,21 @@ public class JwtTokenUtil {
 	public boolean validateToken(String jwtToken, UserDetails userDetails) {
 		
 		final String username = getUsernameFromToken(jwtToken);
-		
-		return username.equals(userDetails.getUsername()) && !isTokenExpired(jwtToken);
-		
+
+		return username.equals(userDetails.getUsername())
+				&& !isTokenExpired(jwtToken)
+				&& getVersionFromToken(jwtToken) == tokenVersionOf(userDetails);
+
+	}
+
+	/** Tokens issued before versioning existed carry no claim and count as version 0. */
+	private long getVersionFromToken(String jwtToken) {
+		Object version = getClaimFromToken(jwtToken, claims -> claims.get(VERSION_CLAIM));
+		return version instanceof Number ? ((Number) version).longValue() : 0L;
+	}
+
+	private static long tokenVersionOf(UserDetails userDetails) {
+		return userDetails instanceof AppUserDetails ? ((AppUserDetails) userDetails).getTokenVersion() : 0L;
 	}
 
 

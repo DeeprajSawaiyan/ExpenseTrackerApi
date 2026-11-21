@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-const APP_NAME = 'Expense Tracker'
+const APP_NAME = 'ExpTrack'
 
 export function usePageTitle(title: string) {
   useEffect(() => {

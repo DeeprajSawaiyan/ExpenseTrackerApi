@@ -22,4 +22,9 @@ public class UserModel {
 	private String password;
 	
 	private Long age = 0L;
+
+	/** Trim before validation so " me@x.com " is accepted. */
+	public void setEmail(String email) {
+		this.email = email == null ? null : email.trim();
+	}
 }

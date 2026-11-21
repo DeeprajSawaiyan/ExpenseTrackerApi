@@ -37,3 +37,12 @@ expense-tracker-frontend/node_modules/
 expense-tracker-frontend/dist/
 expense-tracker-frontend/.env
 expense-tracker-frontend/.env.local
+
+### Local H2 database ###
+data/
+
+### Local SMTP credentials ###
+local-mail.properties
+
+### macOS ###
+.DS_Store
